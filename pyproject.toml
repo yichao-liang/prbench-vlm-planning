@@ -5,12 +5,18 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "prbench_vlm_planning"
 version = "0.1.0"
-description = "A basic starter for Python packages."
+description = "VLM planning baselines for prbench."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
    "matplotlib",
    "numpy",
+   "pandas",
+   "pandas-stubs",
+   "hydra-core",
+   "omegaconf",
+   "prbench @ git+https://github.com/Princeton-Robot-Planning-and-Learning/prbench.git",
+   "prpl-llm-utils @ git+https://github.com/Princeton-Robot-Planning-and-Learning/prpl-llm-utils.git"
 ]
 
 [project.optional-dependencies]
