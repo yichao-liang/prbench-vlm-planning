@@ -26,11 +26,12 @@ from prbench_vlm_planning.agent import VLMPlanningAgent, VLMPlanningAgentFailure
 from prbench_vlm_planning.env_controllers import get_controllers_for_environment
 
 
-
 @hydra.main(version_base=None, config_name="config", config_path="conf/")
 def _main(cfg: DictConfig) -> None:
 
-    logging.info(f"Running seed={cfg.seed}, env={cfg.env.env_name}, vlm_model={cfg.vlm_model}")
+    logging.info(
+        f"Running seed={cfg.seed}, env={cfg.env.env_name}, vlm_model={cfg.vlm_model}"
+    )
 
     # Create the environment.
     prbench.register_all_environments()
@@ -38,21 +39,23 @@ def _main(cfg: DictConfig) -> None:
 
     # Load environment-specific controllers if available.
     env_controllers = None
-    if cfg.get('use_env_models', True):
+    if cfg.get("use_env_models", True):
         env_controllers = get_controllers_for_environment(cfg.env.env_name)
         if env_controllers:
-            logging.info(f"Successfully loaded {cfg.env.env_name} controllers: {list(env_controllers['controllers'].keys())}")
+            logging.info(
+                f"Successfully loaded {cfg.env.env_name} controllers: {list(env_controllers['controllers'].keys())}"
+            )
         else:
             logging.info(f"No specific controllers found for {cfg.env.env_name}")
 
     # Create the agent.
     agent = VLMPlanningAgent(
         vlm_model_name=cfg.vlm_model,
-        temperature=cfg.get('temperature', 0.0),
-        max_planning_horizon=cfg.get('max_planning_horizon', 50),
+        temperature=cfg.get("temperature", 0.0),
+        max_planning_horizon=cfg.get("max_planning_horizon", 50),
         seed=cfg.seed,
         env_models=env_controllers,
-        use_image=cfg.get('use_image', True),
+        use_image=cfg.get("use_image", True),
     )
 
     # Evaluate.
@@ -99,7 +102,7 @@ def _run_single_episode_evaluation(
     obs, info = env.reset(seed=seed)
     planning_time = 0.0  # measure the time taken by the approach only
     planning_failed = False
-    
+
     # Initial planning
     with timer() as result:
         try:
@@ -108,10 +111,10 @@ def _run_single_episode_evaluation(
             logging.info(f"Agent failed to find any plan: {e}")
             planning_failed = True
     planning_time += result["time"]
-    
+
     if planning_failed:
         return {"success": False, "steps": steps, "planning_time": planning_time}
-    
+
     # Execute the plan
     for _ in range(max_eval_steps):
         with timer() as result:
@@ -121,21 +124,21 @@ def _run_single_episode_evaluation(
                 logging.info(f"Agent failed during execution: {e}")
                 break
         planning_time += result["time"]
-        
+
         # Execute action in environment
         obs, rew, done, truncated, info = env.step(action)
         reward = float(rew)
         assert not truncated
-        
+
         with timer() as result:
             agent.update(obs, reward, done, info)
         planning_time += result["time"]
-        
+
         if done:
             success = True
             break
         steps += 1
-        
+
     logging.info(f"Success result: {success}")
     return {"success": success, "steps": steps, "planning_time": planning_time}
 
