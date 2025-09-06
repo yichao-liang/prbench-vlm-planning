@@ -2,7 +2,8 @@
 
 Examples:
     python experiments/run_experiment.py env=Motion2D-p1 seed=0 vlm_model=gpt-5
-    python experiments/run_experiment.py env=Motion2D-p1 seed=0 vlm_model=gpt-5-nano temperature=1
+    python experiments/run_experiment.py env=Motion2D-p1 seed=0 \\
+        vlm_model=gpt-5-nano temperature=1
 
     python experiments/run_experiment.py -m env=Motion2D-p1 seed='range(0,10)'
 """
@@ -49,7 +50,7 @@ def _main(cfg: DictConfig) -> None:
             )
 
     # Create the agent.
-    agent = VLMPlanningAgent(
+    agent: VLMPlanningAgent = VLMPlanningAgent(
         observation_space=env.observation_space,
         vlm_model_name=cfg.vlm_model,
         temperature=cfg.temperature,

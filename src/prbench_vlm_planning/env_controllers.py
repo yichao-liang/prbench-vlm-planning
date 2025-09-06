@@ -5,6 +5,11 @@ import inspect
 import logging
 from typing import Any, Optional, Set
 
+try:
+    from prbench_models.geom2d.utils import Geom2dRobotController
+except ImportError:
+    Geom2dRobotController = None  # type: ignore
+
 
 def get_controllers_for_environment(env_name: str) -> Optional[Set[Any]]:
     """Automatically load all controllers for a given environment from prbench_models.
@@ -58,11 +63,9 @@ def _import_all_controllers(module_path: str, env_type: str) -> Optional[Set[Any
         # Import the module
         module = importlib.import_module(module_path)
 
-        # Import the base controller class to check inheritance
-        try:
-            from prbench_models.geom2d.utils import Geom2dRobotController
-        except ImportError:
-            raise ImportError(f"Could not import Geom2dRobotController")
+        # Check if base controller class is available
+        if Geom2dRobotController is None:
+            raise ImportError("Could not import Geom2dRobotController")
 
         # Find all controller classes that are subclasses of Geom2dRobotController
         controllers = set()
@@ -70,7 +73,7 @@ def _import_all_controllers(module_path: str, env_type: str) -> Optional[Set[Any
             if not name.startswith("_"):
                 # Check if it's a subclass of Geom2dRobotController
                 if (
-                    Geom2dRobotController
+                    Geom2dRobotController is not None
                     and issubclass(obj, Geom2dRobotController)
                     and obj != Geom2dRobotController
                 ):
@@ -82,9 +85,9 @@ def _import_all_controllers(module_path: str, env_type: str) -> Optional[Set[Any
                 f"{[cls.__name__ for cls in controllers]}"
             )
             return controllers
-        else:
-            logging.info(f"No controllers found in {module_path}")
-            return None
+
+        logging.info(f"No controllers found in {module_path}")
+        return None
 
     except ImportError as e:
         logging.info(f"{env_type} controllers not available: {e}")

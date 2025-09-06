@@ -1,6 +1,7 @@
 """VLM planning agent for prbench environments."""
 
 import os
+import re
 from pathlib import Path
 from typing import Any, Hashable, List, Optional, TypeVar, cast
 
@@ -10,6 +11,7 @@ from numpy.typing import NDArray
 from PIL import ImageDraw
 from prpl_llm_utils.cache import FilePretrainedLargeModelCache
 from prpl_llm_utils.models import OpenAIModel
+from prpl_utils.gym_agent import Agent
 
 
 def create_vlm_by_name(model_name: str):
@@ -24,8 +26,6 @@ def create_vlm_by_name(model_name: str):
     except Exception as e:
         raise ValueError(f"Failed to create VLM model: {e}")
 
-
-from prpl_utils.gym_agent import Agent
 
 _O = TypeVar("_O", bound=Hashable)
 _U = TypeVar("_U", bound=Hashable)
@@ -118,8 +118,13 @@ class VLMPlanningAgent(Agent[_O, _U]):
 
         # Prepare images if available and using images
         images = None
-        if self._use_image and hasattr(obs, "get") and "rgb" in obs:
-            rgb_obs = obs["rgb"]
+        if (
+            self._use_image
+            and hasattr(obs, "get")
+            and hasattr(obs, "__contains__")
+            and "rgb" in obs
+        ):
+            rgb_obs = obs["rgb"]  # type: ignore
             if isinstance(rgb_obs, np.ndarray):
                 pil_img = PIL.Image.fromarray(rgb_obs)
                 # Add text overlay indicating this is the initial state
@@ -164,7 +169,9 @@ class VLMPlanningAgent(Agent[_O, _U]):
         """Get string description of available actions."""
         return "Actions: TODO"
 
-    def _get_objects_str(self, obs: _O, info: dict[str, Any]) -> str:
+    def _get_objects_str(
+        self, obs: _O, info: dict[str, Any]  # pylint: disable=unused-argument
+    ) -> str:
         """Get string description of objects in the scene."""
 
         def observation_to_state(o: NDArray[np.float32]):
@@ -172,15 +179,21 @@ class VLMPlanningAgent(Agent[_O, _U]):
             return self._observation_space.devectorize(o)
 
         # Convert observation to state using observation space
-        state = observation_to_state(obs)
+        # Cast obs to the expected NDArray type for observation_to_state
+        state = observation_to_state(cast(NDArray[np.float32], obs))
         return state.pretty_str()
 
-    def _get_goal_str(self, info: dict[str, Any]) -> str:
+    def _get_goal_str(
+        self, info: dict[str, Any]  # pylint: disable=unused-argument
+    ) -> str:
         """Get string description of the goal."""
         return "Goal: TODO"
 
     def _parse_plan_from_text(
-        self, plan_text: str, obs: _O, info: dict[str, Any]
+        self,
+        plan_text: str,
+        obs: _O,  # pylint: disable=unused-argument
+        info: dict[str, Any],  # pylint: disable=unused-argument
     ) -> List[_U]:
         """Parse the VLM output into a list of actions."""
         lines = plan_text.split("\n")
@@ -205,8 +218,6 @@ class VLMPlanningAgent(Agent[_O, _U]):
                 continue
 
             # Remove numbering (e.g., "1. ", "2. ", etc.)
-            import re
-
             line = re.sub(r"^\d+\.\s*", "", line)
 
             # Try to parse action arrays from the text
@@ -225,13 +236,12 @@ class VLMPlanningAgent(Agent[_O, _U]):
 
     def _parse_action_from_text(self, action_text: str) -> Optional[np.ndarray]:
         """Parse a single action from text."""
-        import re
-
         # Look for array-like patterns [a, b, c, d, e]
-        array_match = re.search(
-            r"\[([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?(?:\s*,\s*[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)*)\]",
-            action_text,
+        pattern = (
+            r"\[([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?"
+            r"(?:\s*,\s*[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)*)\]"
         )
+        array_match = re.search(pattern, action_text)
         if array_match:
             try:
                 # Parse the numbers from the array
