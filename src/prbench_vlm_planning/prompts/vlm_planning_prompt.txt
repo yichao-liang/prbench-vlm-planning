@@ -1,10 +1,10 @@
 You are a robot planning assistant. Your task is to analyze the current situation and generate a sequence of actions to achieve the goal.
 
-Available actions and their parameters:
+Available controllers and their parameter space:
 {actions}
 
-Current objects in the scene:
-{objects}
+The current state is:
+{state}
 
 Goal:
 {goal}
@@ -18,4 +18,4 @@ Plan:
 2. [action_name]([parameters])
 ...
 
-Make sure each action is valid and the parameters are appropriate for the current situation. For continuous control, use action arrays in the format [x, y, theta, vel, angular_vel].
+Make sure each action is valid and the parameters are appropriate for the current situation.

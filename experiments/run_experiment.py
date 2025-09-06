@@ -5,9 +5,6 @@ Examples:
     python experiments/run_experiment.py env=Motion2D-p1 seed=0 vlm_model=gpt-5-nano temperature=1
 
     python experiments/run_experiment.py -m env=Motion2D-p1 seed='range(0,10)'
-
-    python experiments/run_experiment.py -m env=StickButton2D-b3 seed=0 \
-        vlm_model=gpt-4o,claude-3-sonnet-20240229
 """
 
 import logging
@@ -43,18 +40,22 @@ def _main(cfg: DictConfig) -> None:
         env_controllers = get_controllers_for_environment(cfg.env.env_name)
         if env_controllers:
             logging.info(
-                f"Successfully loaded {cfg.env.env_name} controllers: {list(env_controllers['controllers'].keys())}"
+                f"Successfully loaded {cfg.env.env_name} controllers: "
+                f"{env_controllers}"
             )
         else:
-            logging.info(f"No specific controllers found for {cfg.env.env_name}")
+            raise ValueError(
+                f"No specific controllers found for " f"{cfg.env.env_name}"
+            )
 
     # Create the agent.
     agent = VLMPlanningAgent(
+        observation_space=env.observation_space,
         vlm_model_name=cfg.vlm_model,
-        temperature=cfg.get("temperature", 0.0),
-        max_planning_horizon=cfg.get("max_planning_horizon", 50),
+        temperature=cfg.temperature,
+        max_planning_horizon=cfg.max_planning_horizon,
         seed=cfg.seed,
-        env_models=env_controllers,
+        env_controllers=env_controllers,
         use_image=cfg.get("use_image", True),
     )
 
