@@ -1,0 +1,10 @@
+# @package _global_
+
+env:
+  env_name: "StickButton2D-b3"
+  make_kwargs:
+    env_id: "prbench/StickButton2D-b3-v0"
+
+# StickButton2D specific settings
+max_eval_steps: 100
+max_planning_horizon: 50

@@ -131,6 +131,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+# Exception: allow experiments/conf/env/ directory
+!experiments/conf/env/
 
 # Spyder project settings
 .spyderproject
