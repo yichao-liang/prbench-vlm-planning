@@ -1,0 +1,10 @@
+# @package _global_
+
+env:
+  env_name: "Obstruction2D-o0"
+  make_kwargs:
+    env_id: "prbench/Obstruction2D-o0-v0"
+
+# Obstruction2D specific settings
+max_eval_steps: 75
+max_planning_horizon: 40
