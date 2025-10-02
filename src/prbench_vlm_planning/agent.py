@@ -187,7 +187,7 @@ class VLMPlanningAgent(Agent[_O, _U]):
         self, info: dict[str, Any]  # pylint: disable=unused-argument
     ) -> str:
         """Get string description of the goal."""
-        return "Goal: TODO"
+        return info.get("description")
 
     def _parse_plan_from_text(
         self,
